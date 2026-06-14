@@ -1,0 +1,22 @@
+{
+  "name": "GSMS App",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "forwardPorts": [4200, 4000],
+  "portsAttributes": {
+    "4200": {
+      "label": "GSMS App UI",
+      "onAutoForward": "openBrowser"
+    },
+    "4000": {
+      "label": "API Proxy",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "npm install",
+  "postStartCommand": "npm run dev:codespaces",
+  "customizations": {
+    "vscode": {
+      "extensions": ["angular.ng-template"]
+    }
+  }
+}

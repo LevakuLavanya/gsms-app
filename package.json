@@ -6,6 +6,7 @@
     "start": "ng serve",
     "proxy": "node proxy/server.mjs",
     "dev": "concurrently -k -n proxy,web -c magenta,cyan \"npm run proxy\" \"ng serve --proxy-config proxy.conf.json\"",
+    "dev:codespaces": "concurrently -k -n proxy,web -c magenta,cyan \"npm run proxy\" \"ng serve --host 0.0.0.0 --proxy-config proxy.conf.json\"",
     "serve:web": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
