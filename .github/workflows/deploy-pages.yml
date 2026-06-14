@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Build for GitHub Pages
-        run: npm run build -- --base-href /gsms-app/
+        run: npm run build -- --base-href /gsms-app/ --configuration github-pages
 
       - name: Add SPA fallback
         run: cp dist/gsms-app/browser/index.html dist/gsms-app/browser/404.html
