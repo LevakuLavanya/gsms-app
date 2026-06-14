@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gsms-app
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: STATIC_DIR=dist/gsms-app/browser node proxy/server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GSMS_API_BASE
+        value: https://api.gsms.app

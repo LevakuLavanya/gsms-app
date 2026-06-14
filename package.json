@@ -9,6 +9,8 @@
     "dev:codespaces": "concurrently -k -n proxy,web -c magenta,cyan \"npm run proxy\" \"ng serve --host 0.0.0.0 --proxy-config proxy.conf.json\"",
     "serve:web": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
+    "build:prod": "ng build --configuration production",
+    "start:prod": "STATIC_DIR=dist/gsms-app/browser node proxy/server.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

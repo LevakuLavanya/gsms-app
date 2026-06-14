@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/gsms-app/browser",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/proxy?path=$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

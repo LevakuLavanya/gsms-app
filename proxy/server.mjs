@@ -8,12 +8,31 @@
  * endpoints and re-issues the request to the upstream API as a GET-with-body
  * (which Node's http stack supports). All other requests are forwarded as-is.
  */
+import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
+import path from 'node:path';
 import { URL } from 'node:url';
 
-const PORT = Number(process.env.PROXY_PORT || 4000);
+const PORT = Number(process.env.PORT || process.env.PROXY_PORT || 4000);
 const UPSTREAM = process.env.GSMS_API_BASE || 'https://api.gsms.app';
+const STATIC_DIR = process.env.STATIC_DIR
+  ? path.resolve(process.env.STATIC_DIR)
+  : null;
+
+const MIME_TYPES = {
+  '.css': 'text/css',
+  '.html': 'text/html; charset=utf-8',
+  '.ico': 'image/x-icon',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json',
+  '.map': 'application/json',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -55,18 +74,42 @@ function planUpstream(req, pathname, query, incomingBody) {
   return { method: req.method, body: incomingBody.length ? incomingBody : null };
 }
 
-const server = http.createServer(async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, CORS_HEADERS);
-    res.end();
+function serveStaticFile(req, res, pathname) {
+  if (!STATIC_DIR) {
+    res.writeHead(404, CORS_HEADERS);
+    res.end('Not found');
     return;
   }
 
-  const incomingUrl = new URL(req.url, `http://localhost:${PORT}`);
-  const pathname = incomingUrl.pathname;
-  const query = incomingUrl.searchParams;
-  const incomingBody = await readBody(req);
+  const relativePath =
+    pathname === '/' || pathname === ''
+      ? 'index.html'
+      : decodeURIComponent(pathname.replace(/^\//, ''));
+  let filePath = path.join(STATIC_DIR, relativePath);
 
+  if (!filePath.startsWith(STATIC_DIR)) {
+    res.writeHead(403, CORS_HEADERS);
+    res.end('Forbidden');
+    return;
+  }
+
+  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    filePath = path.join(STATIC_DIR, 'index.html');
+  }
+
+  if (!fs.existsSync(filePath)) {
+    res.writeHead(404, CORS_HEADERS);
+    res.end('Not found');
+    return;
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': contentType });
+  fs.createReadStream(filePath).pipe(res);
+}
+
+async function handleApi(req, res, pathname, query, incomingBody) {
   const { method, body } = planUpstream(req, pathname, query, incomingBody);
 
   const upstreamUrl = new URL(pathname, UPSTREAM);
@@ -103,8 +146,36 @@ const server = http.createServer(async (req, res) => {
 
   if (body) upstreamReq.write(body);
   upstreamReq.end();
+}
+
+const server = http.createServer(async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, CORS_HEADERS);
+    res.end();
+    return;
+  }
+
+  const incomingUrl = new URL(req.url, `http://localhost:${PORT}`);
+  const pathname = incomingUrl.pathname;
+  const query = incomingUrl.searchParams;
+  const incomingBody = await readBody(req);
+
+  if (pathname.startsWith('/api')) {
+    await handleApi(req, res, pathname, query, incomingBody);
+    return;
+  }
+
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    serveStaticFile(req, res, pathname);
+    return;
+  }
+
+  res.writeHead(405, CORS_HEADERS);
+  res.end('Method not allowed');
 });
 
-server.listen(PORT, () => {
-  console.log(`GSMS proxy listening on http://localhost:${PORT} -> ${UPSTREAM}`);
+server.listen(PORT, '0.0.0.0', () => {
+  const mode = STATIC_DIR ? `UI + API proxy` : 'API proxy';
+  console.log(`GSMS ${mode} listening on http://0.0.0.0:${PORT} -> ${UPSTREAM}`);
+  if (STATIC_DIR) console.log(`Serving static files from ${STATIC_DIR}`);
 });

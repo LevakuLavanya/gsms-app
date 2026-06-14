@@ -1,5 +1,14 @@
 # GSMS App | Laboratory Management System
 
+## Open the app (direct links)
+
+| Link | What it does |
+| ---- | ------------ |
+| **[Open Live App](https://gsms-app.vercel.app)** | Opens the full UI in your browser (login: `admin` / `admin`) |
+| **[Open in StackBlitz](https://stackblitz.com/github/LevakuLavanya/gsms-app)** | Runs the app instantly in your browser — no install |
+| **[Open in GitHub Codespaces](https://github.com/codespaces/new?repo=LevakuLavanya/gsms-app&ref=main)** | Full dev environment in the cloud (~1–2 min startup) |
+| **[GitHub Pages mirror](https://levakulavanya.github.io/gsms-app/)** | Static UI preview (use Live App link above for full API) |
+
 A responsive, mobile-friendly **Laboratory Management System** front end built with
 **Angular 20** and **Angular Material**. It consumes the GSMS REST API
 (`https://api.gsms.app/api`) for authentication, user management and master/lookup data.
